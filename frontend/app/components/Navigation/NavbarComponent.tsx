@@ -26,6 +26,7 @@ interface NavbarProps {
   setCurrentPage: (
     page: "CHAT" | "DOCUMENTS" | "STATUS" | "ADD" | "SETTINGS" | "RAG"
   ) => void;
+  admin : boolean;
 }
 
 const formatGitHubNumber = (num: number): string => {
@@ -42,6 +43,7 @@ const Navbar: React.FC<NavbarProps> = ({
   currentPage,
   setCurrentPage,
   production,
+  admin
 }) => {
   const [gitHubStars, setGitHubStars] = useState("0");
   const icon_size = 18;
@@ -82,7 +84,7 @@ const Navbar: React.FC<NavbarProps> = ({
       <div className="flex flex-row items-center gap-5">
         <img
           src={imageSrc}
-          className="flex rounded-lg w-[50px] md:w-[80px] md:h-[80px] object-contain"
+          className="flex rounded-lg w-[200px] md:w-[200px] md:h-[80px] object-contain"
         />
         <div className="flex flex-col lg:flex-row lg:items-end justify-center lg:gap-3">
           <p className="text-2xl md:text-3xl text-text-verba">{title}</p>
@@ -108,18 +110,20 @@ const Navbar: React.FC<NavbarProps> = ({
                   Chat
                 </a>
               </li>
-              <li key={"Menu Button2"}>
-                <a
-                  className={currentPage === "DOCUMENTS" ? "font-bold" : ""}
-                  onClick={() => {
-                    setCurrentPage("DOCUMENTS");
-                    closeOnClick();
-                  }}
-                >
-                  Documents
-                </a>
-              </li>
-              {production != "Demo" && (
+              {admin && (
+                <li key={"Menu Button2"}>
+                  <a
+                    className={currentPage === "DOCUMENTS" ? "font-bold" : ""}
+                    onClick={() => {
+                      setCurrentPage("DOCUMENTS");
+                      closeOnClick();
+                    }}
+                  >
+                    Documents
+                  </a>
+                </li>
+              )}
+              {production != "Demo" && admin && (
                 <li key={"Menu Button4"}>
                   <a
                     className={currentPage === "ADD" ? "font-bold" : ""}
@@ -132,7 +136,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   </a>
                 </li>
               )}
-              {production != "Demo" && (
+              {production != "Demo" && admin && (
                 <li key={"Menu Button5"}>
                   <a
                     className={currentPage === "SETTINGS" ? "font-bold" : ""}
@@ -161,7 +165,7 @@ const Navbar: React.FC<NavbarProps> = ({
             setCurrentPage={setCurrentPage}
             setPage="CHAT"
           />
-          {production != "Demo" && (
+          {admin && production != "Demo" && (
             <NavbarButton
               hide={false}
               Icon={IoMdAddCircle}
@@ -171,15 +175,17 @@ const Navbar: React.FC<NavbarProps> = ({
               setPage="ADD"
             />
           )}
-          <NavbarButton
-            hide={false}
-            Icon={IoDocumentSharp}
-            title="Documents"
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            setPage="DOCUMENTS"
-          />
-          {production != "Demo" && (
+          {admin && (
+            <NavbarButton
+              hide={false}
+              Icon={IoDocumentSharp}
+              title="Documents"
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              setPage="DOCUMENTS"
+            />
+          )}
+          {production != "Demo" && admin && (
             <NavbarButton
               hide={false}
               Icon={IoSettingsSharp}
@@ -189,19 +195,6 @@ const Navbar: React.FC<NavbarProps> = ({
               setPage="SETTINGS"
             />
           )}
-          <div
-            className={`sm:h-[3vh] lg:h-[5vh] mx-1 hidden md:block bg-text-alt-verba w-px`}
-          ></div>
-          <VerbaButton
-            title={gitHubStars}
-            Icon={FaGithub}
-            onClick={handleGitHubClick}
-            className="hidden md:block"
-            text_size="text-xs"
-            icon_size={18}
-            disabled={false}
-            selected={false}
-          />
         </div>
       </div>
     </div>

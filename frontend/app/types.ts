@@ -554,11 +554,11 @@ export const LightTheme: Theme = {
 export const DarkTheme: Theme = {
   ...LightTheme,
   theme_name: "Dark",
-  title: { ...LightTheme.title, text: "Verba" },
-  subtitle: { ...LightTheme.subtitle, text: "The Dark RAGtriever" },
+  title: { ...LightTheme.title, text: "Univision" },
+  subtitle: { ...LightTheme.subtitle, text: "Univision Support" },
   intro_message: {
     ...LightTheme.intro_message,
-    text: "Welcome to Verba, your open-source RAG application!",
+    text: "Univision support",
   },
   image: {
     ...LightTheme.image,

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { GoogleAnalytics } from "@next/third-parties/google";
 
 // Components
 import Navbar from "./components/Navigation/NavbarComponent";
@@ -38,6 +37,7 @@ export default function Home() {
     "Local"
   );
   const [gtag, setGtag] = useState("");
+  const [admin, setAdmin] = useState(false);
 
   // Settings
   const [themes, setThemes] = useState<Themes>({
@@ -107,6 +107,12 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, [isLoggedIn]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const admin = url.searchParams.get('admin');
+    setAdmin(admin == "ss");
+  }, []);
 
   const isValidTheme = (theme: Theme): boolean => {
     const requiredAttributes = [
@@ -180,8 +186,7 @@ export default function Home() {
     <main
       className={`min-h-screen bg-bg-verba text-text-verba min-w-screen ${fontClassName}`}
       data-theme={selectedTheme.theme}
-    >
-      {gtag !== "" && <GoogleAnalytics gaId={gtag} />}
+    >     
 
       <StatusMessengerComponent
         status_messages={statusMessages}
@@ -206,8 +211,6 @@ export default function Home() {
             isLoaded ? "opacity-100" : "opacity-0"
           } flex flex-col gap-2 p-5`}
         >
-          <GettingStartedComponent addStatusMessage={addStatusMessage} />
-
           <div>
             <Navbar
               production={production}
@@ -217,6 +220,7 @@ export default function Home() {
               version="v2.0.0"
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
+              admin={admin}
             />
 
             <div className={`${currentPage === "CHAT" ? "" : "hidden"}`}>
@@ -230,6 +234,7 @@ export default function Home() {
                 currentPage={currentPage}
                 documentFilter={documentFilter}
                 setDocumentFilter={setDocumentFilter}
+                admin={admin}
               />
             </div>
 
@@ -279,16 +284,11 @@ export default function Home() {
             className={`footer footer-center p-4 mt-8 bg-bg-verba text-text-alt-verba transition-all duration-1500 delay-1000`}
           >
             <aside>
-              <p>Build with ♥ and Weaviate © 2024</p>
+              <p>Build with Weaviate © 2024</p>
             </aside>
           </div>
         </div>
       )}
-
-      <img
-        referrerPolicy="no-referrer-when-downgrade"
-        src="https://static.scarf.sh/a.png?x-pxid=ec666e70-aee5-4e87-bc62-0935afae63ac"
-      />
     </main>
   );
 }

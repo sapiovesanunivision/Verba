@@ -19,12 +19,17 @@ import { GrConnect } from "react-icons/gr";
 import { CgWebsite } from "react-icons/cg";
 import { FaBackspace } from "react-icons/fa";
 import { HiMiniSparkles } from "react-icons/hi2";
+import { FaUser } from "react-icons/fa";
+import { FaPassport } from "react-icons/fa";
 
 import { connectToVerba } from "@/app/api";
 
 import VerbaButton from "../Navigation/VerbaButton";
 
 import { Credentials, RAGConfig, Theme, Themes } from "@/app/types";
+
+import logo from './logo.png';
+import { set } from "date-fns";
 
 let prefix = "";
 if (process.env.NODE_ENV === "production") {
@@ -160,6 +165,9 @@ const LoginView: React.FC<LoginViewProps> = ({
 
   const [errorText, setErrorText] = useState("");
 
+  const [userMode, setUserMode] = useState(false);
+  const [userLoginError, setUserLoginError] = useState(false);
+
   const [selectedDeployment, setSelectedDeployment] = useState<
     "Weaviate" | "Docker" | "Local"
   >("Local");
@@ -173,6 +181,31 @@ const LoginView: React.FC<LoginViewProps> = ({
     }, 300); // Adjust this delay as needed
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const admin = url.searchParams.get('admin');
+    const user = url.searchParams.get('user');
+    const auth = url.searchParams.get('auth');
+    let userAuth = false;
+    if (user == "test")
+    {    
+      userAuth = (auth == "test");
+      setUserLoginError(!userAuth);
+    }
+    else if (user == "univision")
+    {
+      userAuth = (auth == "a....");
+      setUserLoginError(!userAuth);      
+    }
+    else if (user == null || user == "")
+    {
+      setUserLoginError(false);      
+    }
+
+    const adminAuth = (admin == "ss");
+    setUserMode(adminAuth || userAuth);
   }, []);
 
   const connect = async (deployment: "Local" | "Weaviate" | "Docker") => {
@@ -214,38 +247,12 @@ const LoginView: React.FC<LoginViewProps> = ({
         }`}
       >
         <div className="hidden md:flex md:w-1/2 lg:w-3/5 h-full">
-          <Canvas
-            camera={{ position: [0, 0, 4], fov: 50 }}
-            className="w-full h-full touch-none"
-          >
-            <color attach="background" args={["#FAFAFA"]} />
-            <ambientLight intensity={0.5} />
-            <directionalLight
-              castShadow
-              position={[-1, 1, 1]}
-              intensity={1}
-              shadow-mapSize={1024}
-            />
-            <directionalLight
-              castShadow
-              position={[1, 1, -1]}
-              intensity={1}
-              shadow-mapSize={1024}
-            />
-            <directionalLight
-              castShadow
-              position={[0, 1, 1]}
-              intensity={1}
-              shadow-mapSize={1024}
-            />
-            <VerbaThree
-              color="#FAFAFA"
-              useMaterial={production == "Local" ? false : true}
-              model_path={
-                production == "Local" ? "/verba.glb" : "/weaviate.glb"
-              }
-            />
-          </Canvas>
+
+        <img
+          src= "static/logo.svg" 
+          alt = "Univision"
+        />
+
         </div>
         <div className="w-full md:flex md:w-1/2 lg:w-2/5 h-full flex justify-center items-center p-5">
           <div className="flex flex-col gap-8 items-center md:items-start justify-center w-4/5">
@@ -255,40 +262,21 @@ const LoginView: React.FC<LoginViewProps> = ({
                   Welcome to
                 </p>
                 <p className="font-light text-3xl md:text-4xl text-text-verba">
-                  Verba
+                  Univision
                 </p>
               </div>
               {production == "Local" && (
                 <p className="text-text-verba text-base lg:text-lg ">
-                  Choose your deployment
+                  Support website
                 </p>
               )}
             </div>
-            {selectStage ? (
               <div className="flex flex-col justify-start gap-4 w-full">
-                {production == "Local" && (
+                {production == "Local" && userMode && (
                   <div className="flex flex-col justify-start gap-2 w-full">
+                    
                     <VerbaButton
-                      Icon={FaDatabase}
-                      title="Weaviate"
-                      disabled={isConnecting}
-                      onClick={() => {
-                        setSelectStage(false);
-                        setSelectedDeployment("Weaviate");
-                      }}
-                    />
-                    <VerbaButton
-                      title="Docker"
-                      Icon={FaDocker}
-                      disabled={isConnecting}
-                      onClick={() => {
-                        setSelectedDeployment("Docker");
-                        connect("Docker");
-                      }}
-                      loading={isConnecting && selectedDeployment == "Docker"}
-                    />
-                    <VerbaButton
-                      title="Local"
+                      title="Support"
                       Icon={FaLaptopCode}
                       disabled={isConnecting}
                       onClick={() => {
@@ -299,99 +287,46 @@ const LoginView: React.FC<LoginViewProps> = ({
                     />
                   </div>
                 )}
-                {production == "Demo" && (
-                  <div className="flex flex-col justify-start gap-4 w-full">
-                    <VerbaButton
-                      Icon={HiMiniSparkles}
-                      title="Start Demo"
-                      disabled={isConnecting}
-                      onClick={() => {
-                        setSelectedDeployment("Weaviate");
-                        connect("Weaviate");
-                      }}
-                      loading={isConnecting && selectedDeployment == "Weaviate"}
-                    />
-                  </div>
-                )}
-                {production == "Production" && (
-                  <div className="flex flex-col justify-start gap-4 w-full">
-                    <VerbaButton
-                      Icon={HiMiniSparkles}
-                      title="Start Verba"
-                      onClick={() => {
-                        setSelectStage(false);
-                        setSelectedDeployment("Weaviate");
-                      }}
-                    />
-                  </div>
-                )}
               </div>
-            ) : (
               <div className="flex flex-col justify-start gap-4 w-full">
-                {production != "Demo" && (
+                {!userMode && (
                   <div className="flex flex-col justify-start gap-4 w-full">
                     <form
                       onSubmit={(e) => {
-                        e.preventDefault();
-                        connect(selectedDeployment);
                       }}
                     >
                       <label className="input flex items-center gap-2 border-none shadow-md bg-bg-verba">
-                        <FaDatabase className="text-text-alt-verba" />
+                        <FaUser className="text-text-alt-verba" />
                         <input
                           type="text"
                           name="username"
                           value={weaviateURL}
                           onChange={(e) => setWeaviateURL(e.target.value)}
-                          placeholder="Weaviate URL"
+                          placeholder="user"
                           className="grow bg-button-verba text-text-alt-verba hover:text-text-verba w-full"
-                          autoComplete="username"
                         />
                       </label>
                       <label className="input flex items-center gap-2 border-none shadow-md bg-bg-verba mt-4">
-                        <FaKey className="text-text-alt-verba" />
+                        <FaPassport className="text-text-alt-verba" />
                         <input
                           type="password"
                           name="current-password"
                           value={weaviateAPIKey}
                           onChange={(e) => setWeaviateAPIKey(e.target.value)}
-                          placeholder="API Key"
+                          placeholder="password"
                           className="grow bg-button-verba text-text-alt-verba hover:text-text-verba w-full"
-                          autoComplete="current-password"
                         />
                       </label>
                       <div className="flex justify-between gap-4 mt-4">
                         <div className="flex flex-col w-full gap-2">
                           <div className="flex flex-col justify-start gap-2 w-full">
                             <VerbaButton
-                              Icon={GrConnect}
-                              title="Connect to Weaviate"
-                              type="submit"
-                              selected={true}
-                              selected_color="bg-primary-verba"
-                              loading={isConnecting}
-                            />
-                            <VerbaButton
                               Icon={CgWebsite}
-                              title="Register"
+                              title="Login"
                               type="button"
-                              disabled={isConnecting}
                               onClick={() =>
-                                window.open(
-                                  "https://console.weaviate.cloud",
-                                  "_blank"
-                                )
+                                {window.open(window.location.protocol + '//' + window.location.host + "/?user=" + weaviateURL +"&auth=" + weaviateAPIKey, "_self"); }
                               }
-                            />
-                            <VerbaButton
-                              Icon={FaBackspace}
-                              title="Back"
-                              type="button"
-                              button_size="btn-sm"
-                              text_size="text-xs"
-                              icon_size={12}
-                              onClick={() => setSelectStage(true)}
-                              disabled={isConnecting}
                             />
                           </div>
                         </div>
@@ -400,10 +335,14 @@ const LoginView: React.FC<LoginViewProps> = ({
                   </div>
                 )}
               </div>
-            )}
             {errorText && (
               <div className="bg-warning-verba p-4 rounded w-full">
                 <p className="flex w-full whitespace-pre-wrap">{errorText}</p>
+              </div>
+            )}
+            {userLoginError && (
+              <div className="bg-warning-verba p-4 rounded w-full">
+                <p className="flex w-full whitespace-pre-wrap">Invalid user or password</p>
               </div>
             )}
           </div>

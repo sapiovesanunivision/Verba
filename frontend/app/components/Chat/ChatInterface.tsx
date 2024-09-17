@@ -51,6 +51,7 @@ interface ChatInterfaceProps {
   ) => void;
   documentFilter: DocumentFilter[];
   setDocumentFilter: React.Dispatch<React.SetStateAction<DocumentFilter[]>>;
+  admin : boolean
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -65,6 +66,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   addStatusMessage,
   documentFilter,
   setDocumentFilter,
+  admin
 }) => {
   const [selectedSetting, setSelectedSetting] = useState("Chat");
 
@@ -393,7 +395,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             disabled={false}
             selected_color="bg-secondary-verba"
           />
-          {production != "Demo" && (
+          {production != "Demo" && admin && (
             <VerbaButton
               title="Config"
               Icon={FaHammer}
