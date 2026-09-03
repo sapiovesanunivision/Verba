@@ -21,3 +21,6 @@ cache.txt
 .ruff_cache
 *_secrets.json
 ollama
+
+# File utenti con le password: non deve mai finire in git
+verba_users.json

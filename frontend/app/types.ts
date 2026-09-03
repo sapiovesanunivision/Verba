@@ -61,6 +61,13 @@ export type HealthPayload = {
   };
 };
 
+export type LoginPayload = {
+  authenticated: boolean;
+  admin: boolean;
+  user: string;
+  error: string;
+};
+
 export type QueryPayload = {
   error: string;
   documents: DocumentScore[];

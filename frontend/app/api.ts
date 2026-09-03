@@ -1,6 +1,7 @@
 import {
   ConnectPayload,
   HealthPayload,
+  LoginPayload,
   RAGConfig,
   QueryPayload,
   Credentials,
@@ -73,6 +74,30 @@ export const fetchData = async <T>(endpoint: string): Promise<T | null> => {
 // Endpoint /api/health
 export const fetchHealth = (): Promise<HealthPayload | null> =>
   fetchData<HealthPayload>("/api/health");
+
+// Endpoint /api/login
+// The password is only sent to the server, which checks it against the users
+// file. The list of users never reaches the browser.
+export const loginUser = async (
+  user: string,
+  password: string
+): Promise<LoginPayload | null> => {
+  try {
+    const host = await detectHost();
+    const response = await fetch(`${host}/api/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user: user, password: password }),
+    });
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Failed to log in:", error);
+    return null;
+  }
+};
 
 // Endpoint /api/connect
 export const connectToVerba = async (

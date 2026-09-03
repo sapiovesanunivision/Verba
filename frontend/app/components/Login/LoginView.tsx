@@ -22,7 +22,7 @@ import { HiMiniSparkles } from "react-icons/hi2";
 import { FaUser } from "react-icons/fa";
 import { FaPassport } from "react-icons/fa";
 
-import { connectToVerba } from "@/app/api";
+import { connectToVerba, loginUser } from "@/app/api";
 
 import VerbaButton from "../Navigation/VerbaButton";
 
@@ -145,6 +145,7 @@ interface LoginViewProps {
   setRAGConfig: (RAGConfig: RAGConfig | null) => void;
   setSelectedTheme: (theme: Theme) => void;
   setThemes: (themes: Themes) => void;
+  setAdmin: (admin: boolean) => void;
   production: "Local" | "Demo" | "Production";
 }
 
@@ -154,6 +155,7 @@ const LoginView: React.FC<LoginViewProps> = ({
   setSelectedTheme,
   setThemes,
   setIsLoggedIn,
+  setAdmin,
   production,
   setRAGConfig,
 }) => {
@@ -167,6 +169,10 @@ const LoginView: React.FC<LoginViewProps> = ({
 
   const [userMode, setUserMode] = useState(false);
   const [userLoginError, setUserLoginError] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
   const [selectedDeployment, setSelectedDeployment] = useState<
     "Weaviate" | "Docker" | "Local"
@@ -183,29 +189,31 @@ const LoginView: React.FC<LoginViewProps> = ({
     return () => clearTimeout(timer);
   }, []);
 
+  // The password is checked by the server against the users file, which lives
+  // outside the repository. No credential is shipped inside this bundle.
+  const authenticate = async (user: string, password: string) => {
+    setIsAuthenticating(true);
+    const result = await loginUser(user, password);
+    setIsAuthenticating(false);
+
+    const authenticated = result != null && result.authenticated;
+    setUserMode(authenticated);
+    setAdmin(authenticated && result != null && result.admin);
+    setUserLoginError(!authenticated);
+    return authenticated;
+  };
+
+  // Links shared with the users keep working: ?user=<name>&auth=<password>
   useEffect(() => {
     const url = new URL(window.location.href);
-    const admin = url.searchParams.get('admin');
-    const user = url.searchParams.get('user');
-    const auth = url.searchParams.get('auth');
-    let userAuth = false;
-    if (user == "test")
-    {    
-      userAuth = (auth == "test");
-      setUserLoginError(!userAuth);
-    }
-    else if (user == "univision")
-    {
-      userAuth = (auth == "a....");
-      setUserLoginError(!userAuth);      
-    }
-    else if (user == null || user == "")
-    {
-      setUserLoginError(false);      
-    }
+    const user = url.searchParams.get("user");
+    const auth = url.searchParams.get("auth");
 
-    const adminAuth = (admin == "ss");
-    setUserMode(adminAuth || userAuth);
+    if (user && auth) {
+      authenticate(user, auth);
+    } else {
+      setUserLoginError(false);
+    }
   }, []);
 
   const connect = async (deployment: "Local" | "Weaviate" | "Docker") => {
@@ -293,6 +301,8 @@ const LoginView: React.FC<LoginViewProps> = ({
                   <div className="flex flex-col justify-start gap-4 w-full">
                     <form
                       onSubmit={(e) => {
+                        e.preventDefault();
+                        authenticate(loginUsername, loginPassword);
                       }}
                     >
                       <label className="input flex items-center gap-2 border-none shadow-md bg-bg-verba">
@@ -300,8 +310,8 @@ const LoginView: React.FC<LoginViewProps> = ({
                         <input
                           type="text"
                           name="username"
-                          value={weaviateURL}
-                          onChange={(e) => setWeaviateURL(e.target.value)}
+                          value={loginUsername}
+                          onChange={(e) => setLoginUsername(e.target.value)}
                           placeholder="user"
                           className="grow bg-button-verba text-text-alt-verba hover:text-text-verba w-full"
                         />
@@ -311,8 +321,8 @@ const LoginView: React.FC<LoginViewProps> = ({
                         <input
                           type="password"
                           name="current-password"
-                          value={weaviateAPIKey}
-                          onChange={(e) => setWeaviateAPIKey(e.target.value)}
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
                           placeholder="password"
                           className="grow bg-button-verba text-text-alt-verba hover:text-text-verba w-full"
                         />
@@ -323,10 +333,9 @@ const LoginView: React.FC<LoginViewProps> = ({
                             <VerbaButton
                               Icon={CgWebsite}
                               title="Login"
-                              type="button"
-                              onClick={() =>
-                                {window.open(window.location.protocol + '//' + window.location.host + "/?user=" + weaviateURL +"&auth=" + weaviateAPIKey, "_self"); }
-                              }
+                              type="submit"
+                              loading={isAuthenticating}
+                              disabled={isAuthenticating}
                             />
                           </div>
                         </div>

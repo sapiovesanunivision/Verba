@@ -1,0 +1,7 @@
+{
+  "_comment": "Modello del file utenti. Copiarlo come verba_users.json FUORI dal repo (default: ../verba_users.json rispetto alla root del progetto) oppure indicare il percorso con la variabile d'ambiente VERBA_USERS_FILE. Il file reale non va mai committato.",
+  "users": [
+    { "name": "admin", "pswd": "CAMBIAMI", "admin": true },
+    { "name": "utente", "pswd": "CAMBIAMI", "admin": false }
+  ]
+}

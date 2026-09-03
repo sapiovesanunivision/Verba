@@ -7,6 +7,8 @@ import asyncio
 
 from goldenverba.server.helpers import LoggerManager, BatchManager
 
+import hmac
+import json
 import os
 from pathlib import Path
 
@@ -36,6 +38,7 @@ from goldenverba.server.types import (
     GetVectorPayload,
     DataBatchPayload,
     ChunksPayload,
+    LoginPayload,
 )
 
 load_dotenv()
@@ -152,6 +155,86 @@ async def health_check():
             "production": production,
             "gtag": tag,
             "deployments": deployments,
+        }
+    )
+
+
+### LOGIN
+
+# Users and passwords are kept OUTSIDE the repository so they never reach git.
+# Lookup order: $VERBA_USERS_FILE, then verba_users.json next to the project
+# folder, then verba_users.json in the project root (git-ignored fallback).
+PROJECT_DIR = BASE_DIR.parent.parent
+
+
+def resolve_users_file():
+    env_path = os.environ.get("VERBA_USERS_FILE")
+    candidates = [Path(env_path)] if env_path else []
+    candidates += [
+        PROJECT_DIR.parent / "verba_users.json",
+        PROJECT_DIR / "verba_users.json",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def load_users():
+    users_file = resolve_users_file()
+    if users_file is None:
+        msg.warn("No users file found, nobody can log in")
+        return []
+    try:
+        with open(users_file, "r", encoding="utf-8") as file:
+            return json.load(file).get("users", [])
+    except Exception as e:
+        msg.fail(f"Could not read users file {users_file}: {str(e)}")
+        return []
+
+
+@app.post("/api/login")
+async def login(payload: LoginPayload):
+    users = load_users()
+
+    if not users:
+        return JSONResponse(
+            content={
+                "authenticated": False,
+                "admin": False,
+                "user": "",
+                "error": "No users configured on the server",
+            }
+        )
+
+    name = payload.user.strip()
+    matched = None
+    for user in users:
+        # Check every entry so that a wrong name and a wrong password behave alike
+        name_ok = hmac.compare_digest(str(user.get("name", "")), name)
+        password_ok = hmac.compare_digest(str(user.get("pswd", "")), payload.password)
+        if name_ok and password_ok:
+            matched = user
+
+    if matched is None:
+        msg.warn(f"Failed login for user '{name}'")
+        return JSONResponse(
+            content={
+                "authenticated": False,
+                "admin": False,
+                "user": "",
+                "error": "Invalid user or password",
+            }
+        )
+
+    is_admin = bool(matched.get("admin", False))
+    msg.good(f"User '{name}' logged in (admin: {is_admin})")
+    return JSONResponse(
+        content={
+            "authenticated": True,
+            "admin": is_admin,
+            "user": name,
+            "error": "",
         }
     )
 

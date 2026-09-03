@@ -9,6 +9,11 @@ class Credentials(BaseModel):
     key: str
 
 
+class LoginPayload(BaseModel):
+    user: str
+    password: str
+
+
 class ConversationItem(BaseModel):
     type: str
     content: str

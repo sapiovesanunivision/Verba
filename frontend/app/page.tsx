@@ -108,12 +108,6 @@ export default function Home() {
     }
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const admin = url.searchParams.get('admin');
-    setAdmin(admin == "ss");
-  }, []);
-
   const isValidTheme = (theme: Theme): boolean => {
     const requiredAttributes = [
       "primary_color",
@@ -202,6 +196,7 @@ export default function Home() {
           setIsLoggedIn={setIsLoggedIn}
           setRAGConfig={setRAGConfig}
           setCredentials={setCredentials}
+          setAdmin={setAdmin}
         />
       )}
 
